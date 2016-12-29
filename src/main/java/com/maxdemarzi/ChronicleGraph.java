@@ -29,7 +29,7 @@ public class ChronicleGraph {
 
         HashMap<String, Object> nodeProperties = new HashMap<>();
         nodeProperties.put("one", 10000);
-        nodeProperties.put("two", "username");
+        nodeProperties.put("two", "username10000");
         nodeProperties.put("three", "email@yahoo.com");
         nodeProperties.put("four", 50.55D);
 
