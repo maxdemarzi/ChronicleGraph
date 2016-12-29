@@ -5,22 +5,26 @@ import net.openhft.chronicle.map.ExternalMapQueryContext;
 import net.openhft.chronicle.map.MapAbsentEntry;
 import net.openhft.chronicle.map.MapEntry;
 
-import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ChronicleGraph {
 
+    Integer DEFAULT_MAXIMUM_RELATIONSHIPS = 10_000_000;
+    Integer DEFAULT_OUTGOING = 100;
+    Integer DEFAULT_INCOMING = 100;
+
     private static ChronicleMap<String, Object> nodes;
-    private static ChronicleMap<String, Map<String, Object>> relationships;
+    private static ChronicleMap<String, Object> relationships;
     private static HashMap<String, ChronicleMap<String, Set<String>>> related = new HashMap<>();
-    private static final AtomicInteger nodeCounter = new AtomicInteger();
 
     public ChronicleGraph(Integer maxNodes, Integer maxRelationships) {
         HashMap<String, Object> relProperties = new HashMap<>();
         relProperties.put("one", 10000);
 
         relationships = ChronicleMap
-                .of(String.class, (Class<Map<String, Object>>) (Class) Map.class)
+                .of(String.class, Object.class)
                 .name("relationships")
                 .entries(maxRelationships)
                 .averageValue(relProperties)
@@ -102,14 +106,13 @@ public class ChronicleGraph {
     }
 
     public boolean addRelationship (String type, String from, String to) {
-        if(related.containsKey(type+"-out")) {
-            addEdge(related.get(type + "-out"), from, to);
-            addEdge(related.get(type + "-in"), to, from);
-            return true;
-        } else {
-            // TODO: 12/29/16 Maybe create it with default values instead
-            throw new IllegalStateException("Relationship Type: " + type + " should be present in the graph. Try addRelationshipType()");
+        if(!related.containsKey(type+"-out")) {
+            addRelationshipType(type, DEFAULT_MAXIMUM_RELATIONSHIPS, DEFAULT_OUTGOING, DEFAULT_INCOMING);
         }
+        addEdge(related.get(type + "-out"), from, to);
+        addEdge(related.get(type + "-in"), to, from);
+
+        return true;
     }
 
     public boolean addRelationship (String type, String from, String to, HashMap<String, Object> properties) {
@@ -119,7 +122,7 @@ public class ChronicleGraph {
         return true;
     }
 
-    public Map<String, Object> getRelationship(String type, String from, String to) {
+    public Object getRelationship(String type, String from, String to) {
         return relationships.get(from + "-" + to + type);
     }
 

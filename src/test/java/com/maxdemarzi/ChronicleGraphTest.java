@@ -9,7 +9,6 @@ import org.openjdk.jmh.annotations.State;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 @State(Scope.Benchmark)
@@ -38,12 +37,19 @@ public class ChronicleGraphTest {
     }
 
     @Test
+    public void shouldAddRelationshipBeforeItExists() {
+        cg.addRelationship("FRIENDS", "one", "two");
+        Assert.assertEquals(1, cg.getRelationshipTypeAttributes("FRIENDS").get("FRIENDS-out"));
+        Assert.assertEquals(1, cg.getRelationshipTypeAttributes("FRIENDS").get("FRIENDS-in"));
+    }
+
+    @Test
     public void shouldAddRelationshipWithProperties() {
         cg.addRelationshipType("RATED", 10000, 100, 100);
         HashMap<String, Object> properties = new HashMap<>();
         properties.put("stars", 5);
         cg.addRelationship("RATED", "one", "two", properties);
-        Map<String, Object> actual = cg.getRelationship("RATED", "one", "two");
+        Object actual = cg.getRelationship("RATED", "one", "two");
         Assert.assertEquals(properties, actual);
         Assert.assertEquals(1, cg.getRelationshipTypeAttributes("RATED").get("RATED-out"));
         Assert.assertEquals(1, cg.getRelationshipTypeAttributes("RATED").get("RATED-in"));
