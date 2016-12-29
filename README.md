@@ -1,2 +1,3 @@
 # ChronicleGraph
-Messing around with Chronicle to see how it would handle small graphs
+
+Messing around with Chronicle to turn it into Multi-Model Database

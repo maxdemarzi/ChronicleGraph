@@ -10,9 +10,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class ChronicleGraph {
 
-    private static ChronicleMap<Integer, Map<String, Object>> nodes;
+    private static ChronicleMap<String, Object> nodes;
     private static ChronicleMap<String, Map<String, Object>> relationships;
-    private static HashMap<String, ChronicleMap<Integer, Set<Integer>>> related = new HashMap<>();
+    private static HashMap<String, ChronicleMap<String, Set<String>>> related = new HashMap<>();
     private static final AtomicInteger nodeCounter = new AtomicInteger();
 
     public ChronicleGraph(Integer maxNodes, Integer maxRelationships) {
@@ -34,36 +34,39 @@ public class ChronicleGraph {
         nodeProperties.put("four", 50.55D);
 
         nodes = ChronicleMap
-                .of(Integer.class, (Class<Map<String, Object>>) (Class) Map.class)
+                .of(String.class, Object.class)
                 .name("nodes")
                 .entries(maxNodes)
+                .averageKey("uno-dos-tres-cuatro")
                 .averageValue(nodeProperties)
                 .create();
     }
 
 
     public void addRelationshipType(String type, Integer maximum, Integer average_outgoing, Integer average_incoming) {
-        HashSet<Integer> avgOutgoingValue = new HashSet<>();
+        HashSet<String> avgOutgoingValue = new HashSet<>();
         for (int i = 0; i < average_outgoing; i++) {
-            avgOutgoingValue.add(i);
+            avgOutgoingValue.add("some key" + i);
         }
 
-        HashSet<Integer> avgIncomingValue = new HashSet<>();
+        HashSet<String> avgIncomingValue = new HashSet<>();
         for (int i = 0; i < average_incoming; i++) {
-            avgIncomingValue.add(i);
+            avgIncomingValue.add("some key" + i);
         }
 
-        ChronicleMap<Integer, Set<Integer>> cmOut = ChronicleMap
-                .of(Integer.class, (Class<Set<Integer>>) (Class) Set.class)
+        ChronicleMap<String, Set<String>> cmOut = ChronicleMap
+                .of(String.class, (Class<Set<String>>) (Class) Set.class)
                 .name(type+ "-out")
                 .entries(maximum)
                 .averageValue(avgOutgoingValue)
+                .averageKey("one key - another key")
                 .create();
-        ChronicleMap<Integer, Set<Integer>> cmIn = ChronicleMap
-                .of(Integer.class, (Class<Set<Integer>>) (Class) Set.class)
+        ChronicleMap<String, Set<String>> cmIn = ChronicleMap
+                .of(String.class, (Class<Set<String>>) (Class) Set.class)
                 .name(type+ "-in")
                 .entries(maximum)
                 .averageValue(avgIncomingValue)
+                .averageKey("one key - another key")
                 .create();
 
         related.put(type + "-out", cmOut);
@@ -81,17 +84,17 @@ public class ChronicleGraph {
         return attributes;
     }
 
-    public Integer addNode () {
+    public String addNode () {
         return addNode(new HashMap<>());
     }
 
-    public Integer addNode (HashMap<String, Object> properties) {
+    public String addNode (Object properties) {
         Integer nodeId = nodeCounter.incrementAndGet();
-        nodes.put(nodeId, properties);
-        return nodeId;
+        nodes.put(nodeId.toString(), properties);
+        return nodeId.toString();
     }
 
-    public Map<String, Object> getNode(Integer id) {
+    public Object getNode(String id) {
         if (nodes.containsKey(id)) {
             return nodes.get(id);
         } else {
@@ -99,7 +102,7 @@ public class ChronicleGraph {
         }
     }
 
-    public String addRelationship (String type, Integer from, Integer to) {
+    public String addRelationship (String type, String from, String to) {
         if(related.containsKey(type+"-out")) {
             addEdge(related.get(type + "-out"), from, to);
             addEdge(related.get(type + "-in"), to, from);
@@ -110,46 +113,48 @@ public class ChronicleGraph {
         }
     }
 
-    public String addRelationship (String type, Integer from, Integer to, HashMap<String, Object> properties) {
+    public String addRelationship (String type, String from, String to, HashMap<String, Object> properties) {
         relationships.put(from + "-" + to + type, properties);
         addEdge(related.get(type+"-out"), from, to);
         addEdge(related.get(type+"-in"), to, from);
         return  from + "-" + to + type;
     }
 
-    public Map<String, Object> getRelationship(String type, Integer from, Integer to) {
+    public Map<String, Object> getRelationship(String type, String from, String to) {
         return relationships.get(from + "-" + to + type);
     }
 
-    public String removeRelationship (String type, Integer from, Integer to) {
-        removeEdge(related.get(type), from, to);
+    public String removeRelationship (String type, String from, String to) {
+        removeEdge(related.get(type+"-out"), from, to);
+        removeEdge(related.get(type+"-in"), to, from);
         relationships.remove(from + "-" + to + type);
         return  from + "-" + to + type;
     }
 
-    public Set<Integer> getOutgoingRelationships(String type, Integer from) {
+    public Set<String> getOutgoingRelationships(String type, String from) {
         return related.get(type+"-out").get(from);
     }
 
-    public Set<Integer> getIncomingRelationships(String type, Integer to) {
+    public Set<String> getIncomingRelationships(String type, String to) {
         return related.get(type+"-in").get(to);
     }
-    private static boolean addEdge(ChronicleMap<Integer, Set<Integer>> graph, int source, int target) {
+
+    private static boolean addEdge(ChronicleMap<String, Set<String>> graph, String source, String target) {
         if (source == target) {
             throw new IllegalArgumentException("loops are forbidden");
         }
-        try (ExternalMapQueryContext<Integer, Set<Integer>, ?> sc = graph.queryContext(source)) {
+        try (ExternalMapQueryContext<String, Set<String>, ?> sc = graph.queryContext(source)) {
             sc.updateLock().lock();
-            MapEntry<Integer, Set<Integer>> sEntry = sc.entry();
+            MapEntry<String, Set<String>> sEntry = sc.entry();
             if (sEntry != null) {
-                Set<Integer> sNeighbours = sEntry.value().get();
+                Set<String> sNeighbours = sEntry.value().get();
                 if (sNeighbours.add(target)) {
                     sEntry.doReplaceValue(sc.wrapValueAsData(sNeighbours));
                 }
             } else {
-                Set<Integer> sNeighbours = new HashSet<>();
+                Set<String> sNeighbours = new HashSet<>();
                 sNeighbours.add(target);
-                MapAbsentEntry<Integer, Set<Integer>> sAbsentEntry = sc.absentEntry();
+                MapAbsentEntry<String, Set<String>> sAbsentEntry = sc.absentEntry();
                 assert sAbsentEntry != null;
                 sAbsentEntry.doInsert(sc.wrapValueAsData(sNeighbours));
             }
@@ -159,46 +164,24 @@ public class ChronicleGraph {
         return true;
     }
 
-
-    private static boolean removeEdge(
-            ChronicleMap<Integer, Set<Integer>> graph, int source, int target) {
-        ExternalMapQueryContext<Integer, Set<Integer>, ?> sourceC = graph.queryContext(source);
-        ExternalMapQueryContext<Integer, Set<Integer>, ?> targetC = graph.queryContext(target);
-        // order for consistent lock acquisition => avoid dead lock
-        if (sourceC.segmentIndex() <= targetC.segmentIndex()) {
-            return innerRemoveEdge(source, sourceC, target, targetC);
-        } else {
-            return innerRemoveEdge(target, targetC, source, sourceC);
-        }
-    }
-
-    private static boolean innerRemoveEdge(
-            int source, ExternalMapQueryContext<Integer, Set<Integer>, ?> sourceContext,
-            int target, ExternalMapQueryContext<Integer, Set<Integer>, ?> targetContext) {
-        try (ExternalMapQueryContext<Integer, Set<Integer>, ?> sc = sourceContext) {
-            try (ExternalMapQueryContext<Integer, Set<Integer>, ?> tc = targetContext) {
-                sc.updateLock().lock();
-                MapEntry<Integer, Set<Integer>> sEntry = sc.entry();
-                if (sEntry == null)
-                    return false;
-                Set<Integer> sNeighbours = sEntry.value().get();
-                if (!sNeighbours.remove(target))
-                    return false;
-
-                tc.updateLock().lock();
-                MapEntry<Integer, Set<Integer>> tEntry = tc.entry();
-                if (tEntry == null)
-                    throw new IllegalStateException("target node should be present in the graph");
-                Set<Integer> tNeighbours = tEntry.value().get();
-                if (!tNeighbours.remove(source))
-                    throw new IllegalStateException("the target node have an edge to the source");
-                sEntry.doReplaceValue(sc.wrapValueAsData(sNeighbours));
-                tEntry.doReplaceValue(tc.wrapValueAsData(tNeighbours));
-                return true;
+    private static boolean removeEdge(ChronicleMap<String, Set<String>> graph, String source, String target) {
+        try (ExternalMapQueryContext<String, Set<String>, ?> sc = graph.queryContext(source)) {
+            sc.updateLock().lock();
+            MapEntry<String, Set<String>> sEntry = sc.entry();
+            if (sEntry == null) {
+                return false;
             }
+            Set<String> sNeighbours = sEntry.value().get();
+            if (!sNeighbours.remove(target)) {
+                return false;
+            }
+            if (sNeighbours.isEmpty()) {
+                sc.remove(sEntry);
+            } else {
+                sEntry.doReplaceValue(sc.wrapValueAsData(sNeighbours));
+            }
+            return true;
         }
     }
-
-
 
 }
