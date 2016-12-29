@@ -84,14 +84,13 @@ public class ChronicleGraph {
         return attributes;
     }
 
-    public String addNode () {
-        return addNode(new HashMap<>());
+    public boolean addNode (String key) {
+        return addNode(key,"");
     }
 
-    public String addNode (Object properties) {
-        Integer nodeId = nodeCounter.incrementAndGet();
-        nodes.put(nodeId.toString(), properties);
-        return nodeId.toString();
+    public boolean addNode (String key, Object properties) {
+        nodes.put(key, properties);
+        return true;
     }
 
     public Object getNode(String id) {
@@ -102,22 +101,22 @@ public class ChronicleGraph {
         }
     }
 
-    public String addRelationship (String type, String from, String to) {
+    public boolean addRelationship (String type, String from, String to) {
         if(related.containsKey(type+"-out")) {
             addEdge(related.get(type + "-out"), from, to);
             addEdge(related.get(type + "-in"), to, from);
-            return from + "-" + to + type;
+            return true;
         } else {
             // TODO: 12/29/16 Maybe create it with default values instead
             throw new IllegalStateException("Relationship Type: " + type + " should be present in the graph. Try addRelationshipType()");
         }
     }
 
-    public String addRelationship (String type, String from, String to, HashMap<String, Object> properties) {
+    public boolean addRelationship (String type, String from, String to, HashMap<String, Object> properties) {
         relationships.put(from + "-" + to + type, properties);
         addEdge(related.get(type+"-out"), from, to);
         addEdge(related.get(type+"-in"), to, from);
-        return  from + "-" + to + type;
+        return true;
     }
 
     public Map<String, Object> getRelationship(String type, String from, String to) {

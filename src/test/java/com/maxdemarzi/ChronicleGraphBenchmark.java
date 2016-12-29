@@ -41,7 +41,7 @@ public class ChronicleGraphBenchmark {
     public int measureCreateEmptyNodes() throws IOException {
         int user;
         for (user = 0; user < userCount; user++) {
-            db.addNode();
+            db.addNode("user" + user);
         }
         return user;
     }
@@ -59,7 +59,7 @@ public class ChronicleGraphBenchmark {
             HashMap<String, Object> properties = new HashMap<>();
             properties.put("id", user);
             properties.put("username", "username" + user );
-            db.addNode(properties);
+            db.addNode("user" +user, properties);
         }
         return user;
     }

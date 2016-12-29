@@ -63,8 +63,9 @@ public class ChronicleGraphTest {
 
     @Test
     public void shouldAddNode() {
-        String nodeId = cg.addNode();
-        Assert.assertEquals(new HashMap<>(), cg.getNode(nodeId));
+        boolean created = cg.addNode("key");
+        Assert.assertTrue(created);
+        Assert.assertEquals("", cg.getNode("key"));
     }
 
     @Test
@@ -72,14 +73,16 @@ public class ChronicleGraphTest {
         HashMap<String, Object> properties = new HashMap<>();
         properties.put("name", "max");
         properties.put("email", "maxdemarzi@hotmail.com");
-        String nodeId = cg.addNode(properties);
-        Assert.assertEquals(properties, cg.getNode(nodeId));
+        boolean created = cg.addNode("max", properties);
+        Assert.assertTrue(created);
+        Assert.assertEquals(properties, cg.getNode("max"));
     }
 
     @Test
     public void shouldAddNodeWithSimpleProperty() {
-        String nodeId = cg.addNode(5);
-        Assert.assertEquals(5, cg.getNode(nodeId));
+        boolean created = cg.addNode("simple", 5);
+        Assert.assertTrue(created);
+        Assert.assertEquals(5, cg.getNode("simple"));
     }
 
     @Test
@@ -94,32 +97,33 @@ public class ChronicleGraphTest {
         properties.put("name", "max");
         properties.put("email", "maxdemarzi@hotmail.com");
         properties.put("address", address);
-        String nodeId = cg.addNode(properties);
-        Assert.assertEquals(properties, cg.getNode(nodeId));
+        boolean created = cg.addNode("complex", properties);
+        Assert.assertTrue(created);
+        Assert.assertEquals(properties, cg.getNode("complex"));
     }
 
     @Test
     public void shouldGetNodeOutgoingRelationships() {
-        String nodeOneId = cg.addNode();
-        String nodeTwoId = cg.addNode();
-        String nodeThreeId = cg.addNode();
+        cg.addNode("one");
+        cg.addNode("two");
+        cg.addNode("three");
         cg.addRelationshipType("FRIENDS", 10000, 100, 100);
-        cg.addRelationship("FRIENDS", nodeOneId, nodeTwoId);
-        cg.addRelationship("FRIENDS", nodeOneId, nodeThreeId);
-        Set<String> actual = cg.getOutgoingRelationships("FRIENDS", nodeOneId);
-        Assert.assertEquals(new HashSet<String>() {{ add(nodeTwoId); add(nodeThreeId);}}, actual);
+        cg.addRelationship("FRIENDS", "one", "two");
+        cg.addRelationship("FRIENDS", "one", "three");
+        Set<String> actual = cg.getOutgoingRelationships("FRIENDS", "one");
+        Assert.assertEquals(new HashSet<String>() {{ add("two"); add("three");}}, actual);
     }
 
     @Test
     public void shouldGetNodeIncomingRelationships() {
-        String nodeOneId = cg.addNode();
-        String nodeTwoId = cg.addNode();
-        String nodeThreeId = cg.addNode();
+        cg.addNode("one");
+        cg.addNode("two");
+        cg.addNode("three");
         cg.addRelationshipType("FRIENDS", 10000, 100, 100);
-        cg.addRelationship("FRIENDS", nodeOneId, nodeTwoId);
-        cg.addRelationship("FRIENDS", nodeOneId, nodeThreeId);
-        Set<String> actual = cg.getIncomingRelationships("FRIENDS", nodeTwoId);
-        Assert.assertEquals(new HashSet<String>() {{ add(nodeOneId); }}, actual);
+        cg.addRelationship("FRIENDS", "one", "two");
+        cg.addRelationship("FRIENDS", "one", "three");
+        Set<String> actual = cg.getIncomingRelationships("FRIENDS", "two");
+        Assert.assertEquals(new HashSet<String>() {{ add("one"); }}, actual);
     }
 
 }
