@@ -5,10 +5,7 @@ import net.openhft.chronicle.map.ExternalMapQueryContext;
 import net.openhft.chronicle.map.MapAbsentEntry;
 import net.openhft.chronicle.map.MapEntry;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ChronicleGraph {
@@ -90,14 +87,27 @@ public class ChronicleGraph {
 
     public Integer addNode (HashMap<String, Object> properties) {
         Integer nodeId = nodeCounter.incrementAndGet();
-        nodes.put(nodeCounter.incrementAndGet(), properties);
+        nodes.put(nodeId, properties);
         return nodeId;
     }
 
+    public Map<String, Object> getNode(Integer id) {
+        if (nodes.containsKey(id)) {
+            return nodes.get(id);
+        } else {
+            return new HashMap<>();
+        }
+    }
+
     public String addRelationship (String type, Integer from, Integer to) {
-        addEdge(related.get(type+"-out"), from, to);
-        addEdge(related.get(type+"-in"), to, from);
-        return  from + "-" + to + type;
+        if(related.containsKey(type+"-out")) {
+            addEdge(related.get(type + "-out"), from, to);
+            addEdge(related.get(type + "-in"), to, from);
+            return from + "-" + to + type;
+        } else {
+            // TODO: 12/29/16 Maybe create it with default values instead
+            throw new IllegalStateException("Relationship Type: " + type + " should be present in the graph. Try addRelationshipType()");
+        }
     }
 
     public String addRelationship (String type, Integer from, Integer to, HashMap<String, Object> properties) {
@@ -107,8 +117,7 @@ public class ChronicleGraph {
         return  from + "-" + to + type;
     }
 
-    public
-    Map<String, Object> getRelationship(String type, Integer from, Integer to) {
+    public Map<String, Object> getRelationship(String type, Integer from, Integer to) {
         return relationships.get(from + "-" + to + type);
     }
 
@@ -118,6 +127,13 @@ public class ChronicleGraph {
         return  from + "-" + to + type;
     }
 
+    public Set<Integer> getOutgoingRelationships(String type, Integer from) {
+        return related.get(type+"-out").get(from);
+    }
+
+    public Set<Integer> getIncomingRelationships(String type, Integer to) {
+        return related.get(type+"-in").get(to);
+    }
     private static boolean addEdge(ChronicleMap<Integer, Set<Integer>> graph, int source, int target) {
         if (source == target) {
             throw new IllegalArgumentException("loops are forbidden");
@@ -144,7 +160,7 @@ public class ChronicleGraph {
     }
 
 
-    public static boolean removeEdge(
+    private static boolean removeEdge(
             ChronicleMap<Integer, Set<Integer>> graph, int source, int target) {
         ExternalMapQueryContext<Integer, Set<Integer>, ?> sourceC = graph.queryContext(source);
         ExternalMapQueryContext<Integer, Set<Integer>, ?> targetC = graph.queryContext(target);
