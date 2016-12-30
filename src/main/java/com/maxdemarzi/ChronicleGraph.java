@@ -5,10 +5,7 @@ import net.openhft.chronicle.map.ExternalMapQueryContext;
 import net.openhft.chronicle.map.MapAbsentEntry;
 import net.openhft.chronicle.map.MapEntry;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class ChronicleGraph {
 
@@ -168,14 +165,35 @@ public class ChronicleGraph {
         return true;
     }
 
-    public Set<String> getOutgoingRelationships(String type, String from) {
+    public Set<String> getOutgoingRelationshipNodeIds(String type, String from) {
         return related.get(type+"-out").get(from);
     }
 
-    public Set<String> getIncomingRelationships(String type, String to) {
+    public Set<String> getIncomingRelationshipNodeIds(String type, String to) {
         return related.get(type+"-in").get(to);
     }
 
+    public Set<Object> getOutgoingRelationshipNodes(String type, String from) {
+        Set<Object> results = new HashSet<>();
+        for (String key : related.get(type+"-out").get(from) ) {
+            HashMap<String, Object> properties = new HashMap<>();
+            properties.put("_id", key);
+            properties.put("properties", nodes.get(key));
+            results.add(properties);
+        }
+        return results;
+    }
+
+    public Set<Object> getIncomingRelationshipNodes(String type, String from) {
+        Set<Object> results = new HashSet<>();
+        for (String key : related.get(type+"-in").get(from) ) {
+            HashMap<String, Object> properties = new HashMap<>();
+            properties.put("_id", key);
+            properties.put("properties", nodes.get(key));
+            results.add(properties);
+        }
+        return results;
+    }
     private static boolean addEdge(ChronicleMap<String, Set<String>> graph, String source, String target) {
         if (source == target) {
             throw new IllegalArgumentException("loops are forbidden");

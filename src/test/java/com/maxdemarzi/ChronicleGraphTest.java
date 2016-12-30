@@ -134,27 +134,80 @@ public class ChronicleGraphTest {
     }
 
     @Test
-    public void shouldGetNodeOutgoingRelationships() {
+    public void shouldGetNodeOutgoingRelationshipNodeIds() {
         cg.addNode("one");
         cg.addNode("two");
         cg.addNode("three");
         cg.addRelationshipType("FRIENDS", 10000, 100, 100);
         cg.addRelationship("FRIENDS", "one", "two");
         cg.addRelationship("FRIENDS", "one", "three");
-        Set<String> actual = cg.getOutgoingRelationships("FRIENDS", "one");
+        Set<String> actual = cg.getOutgoingRelationshipNodeIds("FRIENDS", "one");
         Assert.assertEquals(new HashSet<String>() {{ add("two"); add("three");}}, actual);
     }
 
     @Test
-    public void shouldGetNodeIncomingRelationships() {
+    public void shouldGetNodeIncomingRelationshipNodeIds() {
         cg.addNode("one");
         cg.addNode("two");
         cg.addNode("three");
         cg.addRelationshipType("FRIENDS", 10000, 100, 100);
         cg.addRelationship("FRIENDS", "one", "two");
         cg.addRelationship("FRIENDS", "one", "three");
-        Set<String> actual = cg.getIncomingRelationships("FRIENDS", "two");
+        Set<String> actual = cg.getIncomingRelationshipNodeIds("FRIENDS", "two");
         Assert.assertEquals(new HashSet<String>() {{ add("one"); }}, actual);
     }
 
+    @Test
+    public void shouldGetNodeOutgoingRelationshipNodes() {
+        cg.addNode("one", 1);
+        cg.addNode("two", "node two");
+
+        HashMap<String, Object> node3props = new HashMap<> ();
+        node3props.put("property1", 3);
+        cg.addNode("three", node3props);
+
+        cg.addRelationshipType("FRIENDS", 10000, 100, 100);
+        cg.addRelationship("FRIENDS", "one", "two");
+        cg.addRelationship("FRIENDS", "one", "three");
+        Set<Object> actual = cg.getOutgoingRelationshipNodes("FRIENDS", "one");
+
+        Set<Object> expected = new HashSet<Object>() {{
+            add( new HashMap<String, Object>() {{
+                put("_id", "two");
+                put("properties", "node two");
+            }});
+            add( new HashMap<String, Object>() {{
+                put("_id", "three");
+                put("properties", node3props);
+            }});
+        }};
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void shouldGetNodeIncomingRelationshipNodes() {
+        cg.addNode("one", 1);
+        cg.addNode("two", "node two");
+
+        HashMap<String, Object> node3props = new HashMap<> ();
+        node3props.put("property1", 3);
+        cg.addNode("three", node3props);
+
+        cg.addRelationshipType("FRIENDS", 10000, 100, 100);
+        cg.addRelationship("FRIENDS", "two", "one");
+        cg.addRelationship("FRIENDS", "three", "one");
+        Set<Object> actual = cg.getIncomingRelationshipNodes("FRIENDS", "one");
+
+        Set<Object> expected = new HashSet<Object>() {{
+            add( new HashMap<String, Object>() {{
+                put("_id", "two");
+                put("properties", "node two");
+            }});
+            add( new HashMap<String, Object>() {{
+                put("_id", "three");
+                put("properties", node3props);
+            }});
+        }};
+        Assert.assertEquals(expected, actual);
+    }
 }
