@@ -105,7 +105,7 @@ public class ChronicleGraphTest {
         cg.addNode("three");
         cg.addRelationshipType("FRIENDS", 10000, 100, 100);
         cg.addRelationship("FRIENDS", "one", "two", 9);
-        cg.addRelationship("FRIENDS", "one", "three", 10);
+        cg.addRelationship("FRIENDS", "three", "one", 10);
 
         boolean result = cg.removeNode("one");
         Assert.assertTrue(result);
@@ -113,9 +113,9 @@ public class ChronicleGraphTest {
         Assert.assertEquals(0, cg.getRelationshipTypeAttributes("FRIENDS").get("FRIENDS-in"));
 
         Assert.assertEquals(null, cg.getRelationship("FRIENDS", "one", "two"));
-
+        Assert.assertEquals(null, cg.getRelationship("FRIENDS", "three", "one"));
     }
-    
+
     @Test
     public void shouldAddNodeWithObjectProperties() {
         HashMap<String, Object> address = new HashMap<>();

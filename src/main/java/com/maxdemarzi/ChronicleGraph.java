@@ -125,6 +125,7 @@ public class ChronicleGraph {
                     ChronicleMap<String, Set<String>> reversecm = related.get(entry.getKey().replace("-in", "-out"));
                     for (String other : cm.get(id)) {
                         removeEdge(reversecm, other, id);
+                        relationships.remove(other + "-" + id + entry.getKey().replace("-in",""));
                     }
                     cm.remove(id);
                 }
