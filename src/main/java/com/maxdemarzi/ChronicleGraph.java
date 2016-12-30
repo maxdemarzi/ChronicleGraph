@@ -194,9 +194,10 @@ public class ChronicleGraph {
         }
         return results;
     }
+
     private static boolean addEdge(ChronicleMap<String, Set<String>> graph, String source, String target) {
-        if (source == target) {
-            throw new IllegalArgumentException("loops are forbidden");
+        if (source.equals(target)) {
+            return false;
         }
         try (ExternalMapQueryContext<String, Set<String>, ?> sc = graph.queryContext(source)) {
             sc.updateLock().lock();
@@ -236,6 +237,8 @@ public class ChronicleGraph {
                 sEntry.doReplaceValue(sc.wrapValueAsData(sNeighbours));
             }
             return true;
+        } catch (Exception e) {
+            return false;
         }
     }
 
