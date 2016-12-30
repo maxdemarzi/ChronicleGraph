@@ -7,6 +7,7 @@ import net.openhft.chronicle.map.MapEntry;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class ChronicleGraph {
@@ -105,6 +106,32 @@ public class ChronicleGraph {
         }
     }
 
+    public boolean removeNode(String id) {
+        nodes.remove(id);
+
+        for (Map.Entry<String, ChronicleMap<String, Set<String>>> entry : related.entrySet()) {
+            ChronicleMap<String, Set<String>> cm = entry.getValue();
+            if (entry.getKey().endsWith("-out")) {
+                if(cm.containsKey(id)) {
+                    ChronicleMap<String, Set<String>> reversecm = related.get(entry.getKey().replace("-out", "-in"));
+                    for (String other : cm.get(id)) {
+                        removeEdge(reversecm, other, id);
+                    }
+                    cm.remove(id);
+                }
+            } else {
+                if(cm.containsKey(id)) {
+                    ChronicleMap<String, Set<String>> reversecm = related.get(entry.getKey().replace("-in", "-out"));
+                    for (String other : cm.get(id)) {
+                        removeEdge(reversecm, other, id);
+                    }
+                    cm.remove(id);
+                }
+            }
+        }
+        return true;
+    }
+
     public boolean addRelationship (String type, String from, String to) {
         if(!related.containsKey(type+"-out")) {
             addRelationshipType(type, DEFAULT_MAXIMUM_RELATIONSHIPS, DEFAULT_OUTGOING, DEFAULT_INCOMING);
@@ -115,7 +142,10 @@ public class ChronicleGraph {
         return true;
     }
 
-    public boolean addRelationship (String type, String from, String to, HashMap<String, Object> properties) {
+    public boolean addRelationship (String type, String from, String to, Object properties) {
+        if(!related.containsKey(type+"-out")) {
+            addRelationshipType(type, DEFAULT_MAXIMUM_RELATIONSHIPS, DEFAULT_OUTGOING, DEFAULT_INCOMING);
+        }
         relationships.put(from + "-" + to + type, properties);
         addEdge(related.get(type+"-out"), from, to);
         addEdge(related.get(type+"-in"), to, from);
@@ -126,11 +156,14 @@ public class ChronicleGraph {
         return relationships.get(from + "-" + to + type);
     }
 
-    public String removeRelationship (String type, String from, String to) {
+    public boolean removeRelationship (String type, String from, String to) {
+        if(!related.containsKey(type+"-out")) {
+            return false;
+        }
         removeEdge(related.get(type+"-out"), from, to);
         removeEdge(related.get(type+"-in"), to, from);
         relationships.remove(from + "-" + to + type);
-        return  from + "-" + to + type;
+        return true;
     }
 
     public Set<String> getOutgoingRelationships(String type, String from) {

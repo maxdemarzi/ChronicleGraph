@@ -38,7 +38,7 @@ public class ChronicleGraphTest {
 
     @Test
     public void shouldAddRelationshipBeforeItExists() {
-        cg.addRelationship("FRIENDS", "one", "two");
+        cg.addRelationship("FRIENDS", "one", "two", 3);
         Assert.assertEquals(1, cg.getRelationshipTypeAttributes("FRIENDS").get("FRIENDS-out"));
         Assert.assertEquals(1, cg.getRelationshipTypeAttributes("FRIENDS").get("FRIENDS-in"));
     }
@@ -64,7 +64,6 @@ public class ChronicleGraphTest {
         cg.removeRelationship("FRIENDS", "one", "two");
         Assert.assertEquals(0, cg.getRelationshipTypeAttributes("FRIENDS").get("FRIENDS-out"));
         Assert.assertEquals(0, cg.getRelationshipTypeAttributes("FRIENDS").get("FRIENDS-in"));
-
     }
 
     @Test
@@ -91,6 +90,28 @@ public class ChronicleGraphTest {
         Assert.assertEquals(5, cg.getNode("simple"));
     }
 
+    @Test
+    public void shouldRemoveNode() {
+        boolean result = cg.addNode("simple", 5);
+        Assert.assertTrue(result);
+        result = cg.removeNode("simple");
+        Assert.assertTrue(result);
+    }
+
+    @Test
+    public void shouldRemoveNodeRelationships() {
+        cg.addNode("one");
+        cg.addNode("two");
+        cg.addNode("three");
+        cg.addRelationshipType("FRIENDS", 10000, 100, 100);
+        cg.addRelationship("FRIENDS", "one", "two");
+        cg.addRelationship("FRIENDS", "one", "three");
+
+        boolean result = cg.removeNode("one");
+        Assert.assertTrue(result);
+        Assert.assertEquals(0, cg.getRelationshipTypeAttributes("FRIENDS").get("FRIENDS-out"));
+        Assert.assertEquals(0, cg.getRelationshipTypeAttributes("FRIENDS").get("FRIENDS-in"));
+    }
     @Test
     public void shouldAddNodeWithObjectProperties() {
         HashMap<String, Object> address = new HashMap<>();
