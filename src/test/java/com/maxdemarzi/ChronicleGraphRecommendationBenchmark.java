@@ -41,7 +41,7 @@ public class ChronicleGraphRecommendationBenchmark {
         }
 
         for (int person = 0; person < personCount; person++) {
-            for (int like = 0; like < itemCount; like++) {
+            for (int like = 0; like < likesCount; like++) {
                 db.addRelationship("LIKES", "person" + person, "item" + rand.nextInt(itemCount));
             }
         }
@@ -53,7 +53,7 @@ public class ChronicleGraphRecommendationBenchmark {
     @Measurement(iterations = 10)
     @Fork(1)
     @Threads(4)
-    @BenchmarkMode(Mode.AverageTime)
+    @BenchmarkMode(Mode.Throughput)
     @OutputTimeUnit(TimeUnit.SECONDS)
     public List measureRecommendationTraversal() throws IOException {
         Set<String> itemsYouLike = db.getOutgoingRelationshipNodeIds("LIKES", "person" + rand.nextInt(personCount));

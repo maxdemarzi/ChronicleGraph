@@ -48,7 +48,7 @@ public class ChronicleGraphBenchmark {
        }
 
        for (int person = 0; person < personCount; person++) {
-           for (int like = 0; like < itemCount; like++) {
+           for (int like = 0; like < likesCount; like++) {
                db.addRelationship("LIKES", "person" + person, "item" + rand.nextInt(itemCount));
            }
        }
@@ -93,7 +93,7 @@ public class ChronicleGraphBenchmark {
     @Measurement(iterations = 10)
     @Fork(1)
     @Threads(1)
-    @BenchmarkMode(Mode.SingleShotTime)
+    @BenchmarkMode(Mode.Throughput)
     @OutputTimeUnit(TimeUnit.SECONDS)
     public int measureCreateEmptyNodesAndRelationships() throws IOException {
         int user;
