@@ -22,7 +22,7 @@ public class ChronicleGraphBenchmark {
     @Param({"1000"})
     private int userCount;
 
-    @Param({"1000"})
+    @Param({"1"})
     private int personCount;
 
     @Param({"200"})
@@ -31,15 +31,29 @@ public class ChronicleGraphBenchmark {
     @Param({"100"})
     private int friendsCount;
 
-    @Param({"200"})
+    @Param({"1000"})
     private int likesCount;
 
    @Setup(Level.Invocation )
     public void prepare() throws IOException {
        db = new ChronicleGraph(maxNodes, maxRels);
        db.addRelationshipType("FRIENDS", maxRels, 100, 100);
-       db.addRelationshipType("LIKES", maxRels, 100, 100);
-    }
+       db.addRelationshipType("LIKES", maxRels, 1000, 1000);
+
+       for (int item = 0; item < itemCount; item++) {
+           HashMap<String, Object> properties = new HashMap<>();
+           properties.put("id", item);
+           properties.put("itemname", "itemname" + item );
+           db.addNode("item" + item, properties);
+       }
+
+       for (int person = 0; person < personCount; person++) {
+           for (int like = 0; like < itemCount; like++) {
+               db.addRelationship("LIKES", "person" + person, "item" + rand.nextInt(itemCount));
+           }
+       }
+
+   }
 
     @Benchmark
     @Warmup(iterations = 10)
@@ -93,4 +107,57 @@ public class ChronicleGraphBenchmark {
         }
         return user;
     }
+
+    @Benchmark
+    @Warmup(iterations = 10)
+    @Measurement(iterations = 10)
+    @Fork(1)
+    @Threads(4)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.SECONDS)
+    public int measureTraverse() throws IOException {
+        int person;
+        for (person = 0; person < personCount; person++) {
+            db.getOutgoingRelationshipNodeIds("LIKES", "person" + person);
+        }
+        return person;
+    }
+
+    @Benchmark
+    @Warmup(iterations = 10)
+    @Measurement(iterations = 10)
+    @Fork(1)
+    @Threads(4)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.SECONDS)
+    public int measureTraverseAndGetNodes() throws IOException {
+        int person;
+        for (person = 0; person < personCount; person++) {
+            db.getOutgoingRelationshipNodes("LIKES", "person" + person);
+        }
+        return person;
+    }
+
+    @Benchmark
+    @Warmup(iterations = 10)
+    @Measurement(iterations = 10)
+    @Fork(1)
+    @Threads(4)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.SECONDS)
+    public void measureSingleTraversal() throws IOException {
+        db.getOutgoingRelationshipNodeIds("LIKES", "person" + rand.nextInt(personCount));
+    }
+
+    @Benchmark
+    @Warmup(iterations = 10)
+    @Measurement(iterations = 10)
+    @Fork(1)
+    @Threads(4)
+    @BenchmarkMode(Mode.Throughput)
+    @OutputTimeUnit(TimeUnit.SECONDS)
+    public void measureSingleTraversalAndGetNodes() throws IOException {
+        db.getOutgoingRelationshipNodes("LIKES", "person" + rand.nextInt(personCount));
+    }
+
 }
