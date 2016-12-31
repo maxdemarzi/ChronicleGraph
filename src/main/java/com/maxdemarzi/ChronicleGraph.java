@@ -1,5 +1,8 @@
 package com.maxdemarzi;
 
+import net.openhft.chronicle.hash.serialization.SetMarshaller;
+import net.openhft.chronicle.hash.serialization.impl.CharSequenceBytesWriter;
+import net.openhft.chronicle.hash.serialization.impl.StringBytesReader;
 import net.openhft.chronicle.map.ChronicleMap;
 import net.openhft.chronicle.map.ExternalMapQueryContext;
 import net.openhft.chronicle.map.MapAbsentEntry;
@@ -56,12 +59,15 @@ public class ChronicleGraph {
             avgIncomingValue.add("some key" + i);
         }
 
+        SetMarshaller<String> cmValueMashaller = SetMarshaller
+                .of(new StringBytesReader(), CharSequenceBytesWriter.INSTANCE);
         ChronicleMap<String, Set<String>> cmOut = ChronicleMap
                 .of(String.class, (Class<Set<String>>) (Class) Set.class)
                 .name(type+ "-out")
                 .entries(maximum)
                 .averageValue(avgOutgoingValue)
                 .averageKey("one key - another key")
+                .valueMarshaller(cmValueMashaller)
                 .create();
         ChronicleMap<String, Set<String>> cmIn = ChronicleMap
                 .of(String.class, (Class<Set<String>>) (Class) Set.class)
@@ -69,6 +75,7 @@ public class ChronicleGraph {
                 .entries(maximum)
                 .averageValue(avgIncomingValue)
                 .averageKey("one key - another key")
+                .valueMarshaller(cmValueMashaller)
                 .create();
 
         related.put(type + "-out", cmOut);
