@@ -1,6 +1,10 @@
 package com.maxdemarzi;
 
 import org.openjdk.jmh.annotations.*;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -160,4 +164,12 @@ public class ChronicleGraphBenchmark {
         db.getOutgoingRelationshipNodes("LIKES", "person" + rand.nextInt(personCount));
     }
 
+    public static void main(String[] args) throws RunnerException {
+        Options opt = new OptionsBuilder()
+                .include(ChronicleGraphBenchmark.class.getSimpleName() + ".measureCreateEmptyNodesAndRelationships")
+                .forks(1)
+                .build();
+
+        new Runner(opt).run();
+    }
 }
